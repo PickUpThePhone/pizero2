@@ -14,7 +14,7 @@ Open up any folder in your local machine. You will then need to clone the reposi
 
 In vscode, you should activate the virtual environment before installing any new packages. To do this, first open a terminal using Ctrl+Shift+`` ` `` . Then use `cd` to navigate to the environment scrip directory. <br>
 
-`cd <path>/pizero2/bin`
+`cd <path>/pizero2/.venv/bin`
 
 Run the activation script <br
 
@@ -65,7 +65,7 @@ Then run the following set of commands: <br>
 cd ~
 USERNAME=username
 PASSWORD=personalaccesstoken
-echo "https://${USERNAME}:${PASSWORD}@github.co"m > .git-credentials
+echo "https://${USERNAME}:${PASSWORD}@github.com" > .git-credentials
 ```
 
 Then clone the repository as described before, using the command given. 
