@@ -12,11 +12,11 @@ Then, accept my invitation to collaborate in this repo. It should appear in your
 
 Open up any folder in your local machine. You will then need to clone the repository. This creates a local copy on your machine. To do so, either use the github for desktop GUI, or simply right-click in folder -> 'Open Git Bash here' -> `git clone https://github.com/PickUpThePhone/pizero2`
 
-In vscode, you should activate the virtual environment before installing any new packages. To do this, first open a terminal using Ctrl+Shift+`` ` `` . Then use `cd` to navigate to the environment scrip directory. <br>
+In vscode, you should activate the virtual environment before installing any new packages. To do this, first open a terminal using Ctrl+Shift+`` ` `` . Then use `cd` to navigate to the environment script directory. <br>
 
 `cd <path>/pizero2/.venv/bin`
 
-Run the activation script <br
+Run the activation script 
 
 `source activate`
 
@@ -41,6 +41,8 @@ If you haven't used git before, you should probably watch a 5 minute animation o
 - **commit** - Prepares your staged changes before you upload. Allows you to include a nice message that can explain the changes you made. 
 - **push** - Pushes (uploads) the changes to the remote repository.
 
+Typical workflow is add -> commit -> push
+
 ### Other
 - **stash** stashes away (and hides) all the local changes that you made. 
 - **unstash** brings back the local changes. These two commands are good if you want to put aside your local changes, pull the remote repo, and add your changes on top. 
@@ -55,7 +57,7 @@ Firstly, you will need to set up a Personal Access Token (PAT). This will functi
 
 ![](imgs/pat.JPG)
 
-Then, SSH into the pi using vscode Remote Explorer extension. You will need git installed if it is not there already <br> 
+Then, SSH into the pi using vscode Remote Explorer extension. You will need to install git on the rpi if it is not already there <br> 
 
 `sudo apt install git`
 
@@ -72,5 +74,29 @@ Then clone the repository as described before, using the command given.
 
 You should now be able to pull, push etc as if it were your own repository (because I invited you as a collaborator). 
 
+## Using SCP to copy files via SSH 
 
-## Thanks for listening to my ted talk 
+SCP (Secure Copy) uses the SSH protocol to securely transfer files. It can allow you to copy files between machines without the use of git. 
+
+**Copy from computer to rpi** <br> 
+
+`scp "C:\Users\ryan\Desktop\files.zip" user@pizero2.local:/home/user` 
+
+Copies 'files.zip' into the rpi home directory 
+
+**Copy from rpi to computer** <br>
+
+
+
+`scp user@pizero2.local:/home/user/files.zip "C:\Users\ryan\Desktop"`
+
+Copies 'files.zip' into the local machine desktop. 
+
+Adjust the file paths accordingly. 
+
+
+
+
+
+
+
