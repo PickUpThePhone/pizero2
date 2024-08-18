@@ -192,6 +192,65 @@ Typical workflow is add -> commit -> push
 
 --- 
 
+## Troubleshooting 
+
+### Error when cloning-> 'fetch-pack: unexpected disconnect while reading sideband packet'
+
+Run the following command and then try again 
+
+`git config --global http.version HTTP/1.1` 
+
+Switch back to HTTP/2.0 afterwards
+
+`git config --global http.version HTTP/2.0`
+
+### Cannot SSH 
+
+Three possibilities 
+
+***Host name not recognised*** 
+
+On your pi, run the following command and take note of the ip address
+
+`ip address`
+
+Then SSH as usual but instead using the local IP address you found 
+
+`ssh user@192.168.0.50`
+
+***Network interface down*** 
+
+wlan0 will be red if the interface is down. If you are connecting with ethernet, the interface will be eth0. 
+
+`nmcli d status`
+
+Bring the interface up using 
+
+`nmcli d connect wlan0`
+
+***Automatically connected to wrong network on boot*** 
+
+List conencted network 
+
+`nmcli c show`
+
+The SSID of the connected network will be in the NAME column. If you are connected to the wrong network: 
+
+`nmcli up SSID`. 
+
+if you desired network doesn't show up, it means you haven't configured it yet. Run the network GUI and set it up. 
+
+`nmtui` 
+
+Edit a connection -> Add -> Wi-Fi 
+
+- SSID: Network Name 
+- Security: WPA & WPA2 Personal 
+- Password: Network Password 
+
+Leave the rest as defaults and hit okay. 
+
+Then run `nmcli up SSID` again. Or use the network GUI to activate the connection. 
 
 
 
