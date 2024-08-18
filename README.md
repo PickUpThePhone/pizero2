@@ -105,31 +105,34 @@ You should now be able to pull, push etc as if it were your own repository (beca
 
 ## Running code on the pi 
 
-After successful SSH, first activate the environment. 
+After successful SSH, create the virtual environment 
 
-To do this, use `cd` to navigate to the environment script directory. <br>
+`cd <path>/pizero2`
 
-`cd <path>/pizero2/.venv/bin`
+`python -m venv .venv`
 
-Then run the activation script 
+Activate the environment 
 
-`source activate`
+`source .venv/bin/activate`
 
 You should see something like this on your command line
 
 `(.venv) user@pi4:~/pizero2/.venv/bin$` 
 
+Install the requirements.txt file to fill your virtual environment 
+
+`pip install -r requirements.txt`
 
 You may then navigate to the folder where your script is located. 
 
-`cd <path>/pizero2`
+`cd <script-path>`
 
 Run the script
 
-`python example.py`
+``python example.py``
 
 
-## Installing packages 
+## Installing additional packages 
 
 You must not install any packages into the environment on your Windows machine. You must do so on the pi so that there are no compatibility issues.
 
@@ -145,7 +148,17 @@ Run the activation script
 
 You can now install packages freely, as they will be contained within this environment and will automatically install versions that are compatible. Use `pip install <package>` to install. 
 
-If you ever want to see the list of packages and their respective versions: with the environment activated run `pip freeze`. You can save this into a requirements.txt file if you like. 
+There is a .gitignore file to prevent the environment folder being uploaded to git. It creates way too much bloat and packages may not be compatible between systems, causing the whole thing to break. So this folder remains local on your machine. 
+
+If you want to add your new packages to the git 
+
+`cd <path>/pizero2`
+
+`pip freeze > requirements.txt`
+
+The next user to clone the repo will have to run 
+
+`pip install -r requirements.txt` 
 
 
 ## Using SCP to copy files via SSH 
@@ -203,6 +216,8 @@ Run the following command and then try again
 Switch back to HTTP/2.0 afterwards
 
 `git config --global http.version HTTP/2.0`
+
+---
 
 ### Cannot SSH 
 
