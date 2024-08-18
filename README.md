@@ -101,6 +101,12 @@ Navigate to the pizero2 directory, and permanently store the credentials you jus
 
 `git config credential.helper store`
 
+Then set your identity 
+
+`git config --global user.email "you@example.com"`
+
+`git config --global user.name "Your Name`
+
 You should now be able to pull, push etc as if it were your own repository (because I invited you as a collaborator). See the section [Using GitHub for version control](#using-github-for-version-control) for an overview of how to use Git. 
 
 ## Running code on the pi 
