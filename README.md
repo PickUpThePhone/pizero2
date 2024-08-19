@@ -276,12 +276,7 @@ Then run `nmcli up SSID` again. Or use the network GUI to activate the connectio
 ---
 
 
-If you haven't already, flash RPi OS Bullseye Lite (Legacy). Then enable legacy camera interface through: 
-
-`raspi-config`
-
-Then upgrade opencv. 
-
+Upgrade opencv. A couple of depencies will also pop up at some point. I forgot what they were, but just `sudo apt install` them if you see the message. 
 
 `pip install --upgrade opencv-python-headless` 
 
