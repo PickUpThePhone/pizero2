@@ -211,6 +211,6 @@ if __name__ == '__main__':
         #cv2.moveWindow('Original', x_offset * 2-150, y_offset * 2)
         time.sleep(0.01)
 
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+        # if cv2.waitKey(1) & 0xFF == ord('q'):
+        #     break
 
