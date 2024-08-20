@@ -72,24 +72,9 @@ And of course look online and ask ChatGPT about commands and how to do things.
 
 ## Setting up GitHub on the pi
 
-Firstly, you will need to set up a Personal Access Token (PAT). This will function as your GitHub password when you enter your login credentials on the rpi. 
-
-![](imgs/pat.JPG)
-![](imgs/tokens.JPG)
-![](imgs/generatenewtokenclassic.JPG)
-![](imgs/tickrepo.JPG)
-
-Then, SSH into the pi using vscode Remote Explorer extension. You will need to install git on the rpi if it is not already there <br> 
+Install git on the pi if it is not already there <br> 
 
 `sudo apt install git`
-
-Then run the following set of commands: <br>
-
-```bash
-USERNAME=username
-PASSWORD=personalaccesstoken
-echo "https://${USERNAME}:${PASSWORD}@github.com" > /home/user/.git-credentials
-```
 
 Then clone the repository into the home folder
 
@@ -97,19 +82,31 @@ Then clone the repository into the home folder
 
 `git clone https://github.com/PickUpThePhone/pizero2`
 
-Navigate to the pizero2 directory, and permanently store the credentials you just added. 
+Then you will need to set up a Personal Access Token (PAT). This will function as your GitHub password when you enter your login credentials on the rpi. 
+
+![](imgs/pat.JPG)
+![](imgs/tokens.JPG)
+![](imgs/generatenewtokenclassic.JPG)
+![](imgs/tickrepo.JPG)
+
+
+
+## Running the setup script
+
+If you have followed this guide in chronological order, then you are ready to run the setup script. Otherwise, go back to the setting up Git step to get your personal access token and clone this repo. 
+
+Navigate to script directory 
 
 `cd pizero2`
 
-`git config credential.helper store`
+Run the script
 
-Then set your identity 
+`./setup.sh`
 
-`git config --global user.email "you@example.com"`
+If you encounter any errors, you can read the script using `cat setup.sh` and see what it is doing. You can then copy the steps manually. 
 
-`git config --global user.name "Your Name`
+Note that if you run the set up script and it finishes successfully you can skip the environment creation in the next section. 
 
-You should now be able to pull, push etc as if it were your own repository (because I invited you as a collaborator). See the section [Using GitHub for version control](#using-github-for-version-control) for an overview on how to use Git. 
 
 ## Setting up the pi environment
 
@@ -117,7 +114,7 @@ Set up needs to be done locally on every machine that you choose to run your cod
 
 Install the dependencies 
 
-`sudo apt install libcap-dev`
+`sudo apt install libcamera-dev libcap-dev`
 
 Then create the virtual environment 
 
