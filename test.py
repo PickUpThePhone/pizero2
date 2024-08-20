@@ -14,7 +14,7 @@ if __name__ == "__main__":
     cap = init_camera()
     if cap:
         stream = stream_capture(cap, port=8080)
-        stream.run_sever()
+        stream.run_server()
     else: 
         print("Failed to initialise camera [outside of index range?]")
         

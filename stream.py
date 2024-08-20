@@ -9,12 +9,9 @@ class stream_capture:
         self.app = Flask(__name__)
         self.app_route()
 
-    def encode_frame(frame):
-        if frame is None:
-            print("No frame to encode")
-            return None, False
-        ret, buffer = cv.imencode('.jpg', frame)
-        if not ret:
+    def encode_frame(self,frame):
+        success, buffer = cv.imencode('.jpg', frame)
+        if not success:
             print("Failed to encode")
             return None, False
         return buffer.tobytes(), True
@@ -40,7 +37,7 @@ class stream_capture:
 
     def generate_frame(self):
         while True:
-            frame, success = self.cap.read()
+            success,frame = self.cap.read()
             if not success:
                 print("Could not get frame")
                 break
