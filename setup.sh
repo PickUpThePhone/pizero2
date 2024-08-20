@@ -15,7 +15,7 @@ read EMAIL
 git config --global user.name $NAME
 git config --global user.email $EMAIL
 sudo apt update && sudo apt upgrade -y 
-sudo apt install libcamera-dev libcap-dev pip -y 
+sudo apt install libcamera-dev libcap-dev pip python3-venv libgtk2.0-dev pkg-config -y 
 python -m venv .venv 
 source .venv/bin/activate
 pip install --no-input -r requirements.txt
