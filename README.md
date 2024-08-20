@@ -39,9 +39,11 @@ Open up any folder in your local machine. You will then need to clone the reposi
 
  `git clone https://github.com/PickUpThePhone/pizero2`
 
+If you want to activate the virtual environment on windows, first you must run the command below. Although there is not much point in activating the environment since some of the modules only work on linux (because they were installed in a linux environment). So preferably only run your code on the pi. 
+
+`Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process`
 
 
-As long as the environment is ac
 ## Basic Raspberry Pi OS commands
 
 Raspberry Pi OS is Debian based, which means that the following commands will be applicable to most linux systems including Ubuntu. 
@@ -107,11 +109,17 @@ Then set your identity
 
 `git config --global user.name "Your Name`
 
-You should now be able to pull, push etc as if it were your own repository (because I invited you as a collaborator). See the section [Using GitHub for version control](#using-github-for-version-control) for an overview of how to use Git. 
+You should now be able to pull, push etc as if it were your own repository (because I invited you as a collaborator). See the section [Using GitHub for version control](#using-github-for-version-control) for an overview on how to use Git. 
 
-## Running code on the pi 
+## Setting up the pi environment
 
-After successful SSH, create the virtual environment 
+Set up needs to be done locally on every machine that you choose to run your code. The environment folder is ignored when pushing to git because there is too much bloat. 
+
+Install the dependencies 
+
+`sudo apt install libcap-dev`
+
+Then create the virtual environment 
 
 `cd <path>/pizero2`
 
@@ -129,7 +137,11 @@ Install the requirements.txt file to fill your virtual environment
 
 `pip install -r requirements.txt`
 
-You may then navigate to the folder where your script is located. 
+
+
+## Running code on the pi 
+
+First make sure the virtual environment is activated. Then navigate to the folder where your script is located. 
 
 `cd <script-path>`
 
@@ -140,31 +152,10 @@ Run the script
 
 ## Installing additional packages 
 
-You must not install any packages into the environment on your Windows machine. You must do so on the pi so that there are no compatibility issues.
+Activate the virtual environment before installing any new packages. Then use:
 
-After successfully SSH into the pi, you need to activate the virtual environment before installing any new packages.
+`pip install <package>`. 
 
-To do this, first use `cd` to navigate to the environment script directory. <br>
-
-`cd <path>/pizero2/.venv/bin`
-
-Run the activation script 
-
-`source activate`
-
-You can now install packages freely, as they will be contained within this environment and will automatically install versions that are compatible. Use `pip install <package>` to install. 
-
-There is a .gitignore file to prevent the environment folder being uploaded to git. It creates way too much bloat and packages may not be compatible between systems, causing the whole thing to break. So this folder remains local on your machine. 
-
-If you want to add your new packages to the git 
-
-`cd <path>/pizero2`
-
-`pip freeze > requirements.txt`
-
-The next user to clone the repo will have to run 
-
-`pip install -r requirements.txt` 
 
 
 ## Using SCP to copy files via SSH 
@@ -207,13 +198,16 @@ Typical workflow is add -> commit -> push
 
 ### Other
 - **stash** stashes away (and hides) all the local changes that you made. 
-- **unstash** brings back the local changes. These two commands are good if you want to put aside your local changes, pull the remote repo, and add your changes on top. 
+- **stash pop** brings back the local changes. These two commands are good if you want to put aside your local changes, pull the remote repo, and add your changes on top. 
 
 --- 
 
 ## Troubleshooting 
 
 ### Error when cloning-> 'fetch-pack: unexpected disconnect while reading sideband packet'
+
+---
+
 
 Run the following command and then try again 
 
@@ -226,6 +220,8 @@ Switch back to HTTP/2.0 afterwards
 ---
 
 ### Cannot SSH 
+
+---
 
 Three possibilities 
 
@@ -269,9 +265,21 @@ Edit a connection -> Add -> Wi-Fi
 - Security: WPA & WPA2 Personal 
 - Password: Network Password 
 
-Leave the rest as defaults and hit okay. 
+Leave the rest as defaults and hit Ok. 
 
 Then run `nmcli up SSID` again. Or use the network GUI to activate the connection. 
+
+---
+
+### OpenCV cv2.VideoCapture(0) not working 
+
+---
+
+
+Upgrade opencv. A couple of depencies will also pop up at some point. I forgot what they were, but just `sudo apt install` them if you see the message. 
+
+`pip install --upgrade opencv-python-headless` 
+
 
 
 
