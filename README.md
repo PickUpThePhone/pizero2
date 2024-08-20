@@ -39,9 +39,11 @@ Open up any folder in your local machine. You will then need to clone the reposi
 
  `git clone https://github.com/PickUpThePhone/pizero2`
 
-If you want to activate the virtual environment on windows, first you must run the command below. Although there is not much point in activating the environment since some of the modules only work on linux (because they were installed in a linux environment). So preferably only run your code on the pi. 
+If you want to activate the virtual environment on windows, you must use WSL. Download WSL through Powershell using:
 
-`Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process`
+`wsl --install`
+
+You need to have a WSL terminal open before you activate the virtual environment and run code. 
 
 
 ## Basic Raspberry Pi OS commands
@@ -152,6 +154,10 @@ Run the script
 Activate the virtual environment before installing any new packages. Then use:
 
 `pip install <package>`. 
+
+If you want others to be able to use the package you just installed, go to the repo directory and use:
+
+`pip freeze > requirements.txt`
 
 
 
@@ -268,14 +274,6 @@ Then run `nmcli up SSID` again. Or use the network GUI to activate the connectio
 
 ---
 
-### OpenCV cv2.VideoCapture(0) not working 
-
----
-
-
-Upgrade opencv. A couple of depencies will also pop up at some point. I forgot what they were, but just `sudo apt install` them if you see the message. 
-
-`pip install --upgrade opencv-python-headless` 
 
 
 
