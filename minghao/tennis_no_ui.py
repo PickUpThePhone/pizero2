@@ -11,11 +11,15 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import pandas as pd
 import random
+import serial
 
 remove_div_points = 8
 length_filter = 30
 random_points =   20 # int(0.75 *  length_filter ) -1 # num + 0.25 Length < Length 
+image_center_threshold = 30
 
+# set up UART for the STM
+ser = serial.Serial('/dev/serial0', 9600, timeout=1)
 
 
 def get_circle_center(p1, p2, p3):
@@ -191,10 +195,25 @@ if __name__ == '__main__':
                 cv2.rectangle(frame, (x-R_int, y-R_int), (x + R_int, y + R_int), (0, 0, 255), 3)
                 print('circle number : ', i+1 , 'position ' , x-320, y-240)
 
+                # send movement command to the STM:
+                x_pos = x-320
+                direction = "S" # default to stop
+                if x_pos < -image_center_threshold:
+                    direction = "L"
+                elif x_pos > image_center_threshold:
+                    direction = "R"
+                else:
+                    direction = "F"
+                
+                data = ""
+                for i in range(10):
+                    data += direction
+                ser.write(data.encode('utf-8')) #send the command over UART to the STM
+
         # print('time used all', time.time() - ts)
         # x_offset = 600
         # y_offset = 500
-        # # 显示结果图像
+        # 显示结果图像
         # cv2.imshow('erode' ,mask)
         # cv2.moveWindow('erode', x_offset * 0, y_offset * 0)
         # cv2.imshow('color mask' ,tennis_dilated_mask)
@@ -207,8 +226,8 @@ if __name__ == '__main__':
         # cv2.moveWindow('contour after color comb', x_offset * 2, y_offset * 0)
         # cv2.imshow('tennis',frame)
         # cv2.moveWindow('tennis', x_offset * 2, y_offset * 1)
-        #cv2.imshow('Original',Original)
-        #cv2.moveWindow('Original', x_offset * 2-150, y_offset * 2)
+        # cv2.imshow('Original',Original)
+        # cv2.moveWindow('Original', x_offset * 2-150, y_offset * 2)
         time.sleep(0.01)
 
         # if cv2.waitKey(1) & 0xFF == ord('q'):
