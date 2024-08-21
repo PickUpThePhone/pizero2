@@ -15,7 +15,7 @@ read EMAIL
 git config --global user.name $NAME
 git config --global user.email $EMAIL
 sudo apt update && sudo apt upgrade -y 
-sudo apt install libcam-dev pip -y 
+sudo apt install libcap-dev libcam-dev pip -y 
 python -m venv .venv 
 source .venv/bin/activate
 pip install --no-input -r requirements.txt
