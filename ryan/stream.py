@@ -10,6 +10,8 @@ class stream_capture:
         self.app = Flask(__name__)
         self.app_route()
         self.tennis_detector = tennis_detector(length_filter=30, remove_div_points = 8, random_points=20, threshold=4)
+        self.C = []
+        self.R = []
 
     def encode_frame(self, frame):
         success, buffer = cv.imencode('.jpg', frame)
@@ -26,7 +28,6 @@ class stream_capture:
             <!doctype html>
             <html>
             <body>
-                <h1>Video Feed</h1>
                 <img src="/video_feed">
             </body>
             </html>
@@ -46,11 +47,12 @@ class stream_capture:
             print('circle number : ', i+1 , 'position ' , x-320, y-240)
         return frame
     
-    def generate_frame(self):
-        # Example data for circles and radii
-        circles = [(320, 240), (400, 300)]  # Modify this based on your use case
-        radii = [50, 30]  # Modify this based on your use case
+    #Added this function because we will probably want to feed C and R into our decision making class
+    def update_object_coordinates(self,C,R):
+        self.C = C
+        self.R = R
 
+    def generate_frame(self):
         while True:
             #reduce CPU strain 
             time.sleep(0.02)
@@ -59,6 +61,7 @@ class stream_capture:
                 print("Could not get frame")
                 break
             C,R = self.tennis_detector.detect(frame)
+            self.update_object_coordinates(C,R)
             # draw object detection shapes on the frame
             frame = self.draw_shapes(frame, C, R)
             #encode the frame 
