@@ -38,10 +38,10 @@ class Robot:
             frame_packet = self.generate_frame()
             return Response(frame_packet, mimetype='multipart/x-mixed-replace; boundary=frame')
 
-    def draw_shapes(self, frame, C, R):
-        for i in range(len(R)):
-            R_int = R[i]
-            x,y = C[i]
+    def draw_shapes(self, frame):
+        for i in range(len(self.R)):
+            R_int = self.R[i]
+            x,y = self.C[i]
             cv.circle(frame, (x,y), 1, (0,0,255), 8)
             cv.rectangle(frame, (x-R_int, y-R_int), (x + R_int, y + R_int), (0, 0, 255), 3)
             print('circle number : ', i+1 , 'position ' , x-320, y-240)
@@ -52,18 +52,18 @@ class Robot:
             success,frame = self.cap.read()
             if success: 
                 self.C,self.R = self.tennis_detector.detect(frame)
+                print(f"{self.C} AND {self.R}")
             # spam update object coordinates
-            time.sleep(0.02)
     
     def generate_frame(self):
         while True:
-            #reduce CPU strain 
-            time.sleep(0.02)
+            #reduce the frame rate significantly to reduce CPU strain. Can do this because it is just  GUI and not important for the robots function
+            time.sleep(0.2)
             success, frame = self.cap.read()
             if not success:
                 print("Could not get frame")
                 break
-            frame = self.draw_shapes(frame, self.C self.R)
+            frame = self.draw_shapes(frame)
             #encode the frame 
             frame_encoded, success = self.encode_frame(frame)
             if success:
