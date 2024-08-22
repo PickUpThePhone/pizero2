@@ -75,12 +75,12 @@ def is_circle(contour,centers):
 
 if __name__ == '__main__':
 
-    # vid = cv2.VideoCapture(2)
-    # vid.set(cv2.CAP_PROP_FRAME_WIDTH, 640) # 1280
-    # vid.set(cv2.CAP_PROP_FRAME_HEIGHT, 480) # 720
+    vid = cv2.VideoCapture(0)
+    vid.set(cv2.CAP_PROP_FRAME_WIDTH, 640) # 1280
+    vid.set(cv2.CAP_PROP_FRAME_HEIGHT, 480) # 720
 
-    video_path = 'tennis/1.mp4'
-    vid = cv2.VideoCapture(video_path)
+    #video_path = 'tennis/1.mp4'
+    #vid = cv2.VideoCapture(video_path)
 
     while True:
 
@@ -88,7 +88,10 @@ if __name__ == '__main__':
         #frame = cv2.imread('tennis/13.jpg')
 
         if not ret:
-            vid = cv2.VideoCapture(video_path)
+            #vid = cv2.VideoCapture(video_path)
+            vid = cv2.VideoCapture(0)
+            vid.set(cv2.CAP_PROP_FRAME_WIDTH, 640) # 1280
+            vid.set(cv2.CAP_PROP_FRAME_HEIGHT, 480) # 720
             ret, frame = vid.read()
             
 
@@ -123,7 +126,7 @@ if __name__ == '__main__':
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         blurred = cv2.GaussianBlur(gray, (7, 7), 3)
         edges = cv2.Canny(blurred, 50, 150)
-        edges = cv2.bitwise_and(edges, mask_ground)
+        #edges = cv2.bitwise_and(edges, mask_ground)
         # 对 edges 进行膨胀操作
         edges_dilated = cv2.dilate(edges, None, iterations=1)
 
@@ -213,7 +216,7 @@ if __name__ == '__main__':
         # print('time used all', time.time() - ts)
         # x_offset = 600
         # y_offset = 500
-        # 显示结果图像
+        # # 显示结果图像
         # cv2.imshow('erode' ,mask)
         # cv2.moveWindow('erode', x_offset * 0, y_offset * 0)
         # cv2.imshow('color mask' ,tennis_dilated_mask)
