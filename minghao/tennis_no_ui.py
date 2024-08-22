@@ -15,13 +15,20 @@ import serial
 
 remove_div_points = 8
 length_filter = 30
-random_points =   20 # int(0.75 *  length_filter ) -1 # num + 0.25 Length < Length 
+random_points = 20 # int(0.75 *  length_filter ) -1 # num + 0.25 Length < Length 
 image_center_threshold = 30 # pixels to the left/right of center which determine when the robot should drive straight
 box_size_threshold = 10 # minimum bounding box size
 # glitch_mitigation_threshold = 40 # euclidiean distance (in pixels)
 
+robot_control_active = False 
+ui_active = True
+use_video = False
+use_ground_color_mask = False
+camera_id = 1
+
 # set up UART for the STM
-ser = serial.Serial('/dev/serial0', 9600, timeout=1)
+if robot_control_active:
+    ser = serial.Serial('/dev/serial0', 9600, timeout=1)
 
 
 def get_circle_center(p1, p2, p3):
@@ -74,15 +81,15 @@ def is_circle(contour,centers):
     #print('div',np.mean(distances),'R',R,'mean center',mean_center)
     return (np.mean(distances) < threshold ) , mean_center ,R
 
-
 if __name__ == '__main__':
 
-    vid = cv2.VideoCapture(0)
+    vid = cv2.VideoCapture(camera_id)
     vid.set(cv2.CAP_PROP_FRAME_WIDTH, 640) # 1280
     vid.set(cv2.CAP_PROP_FRAME_HEIGHT, 480) # 720
 
-    # video_path = 'tennis/1.mp4'
-    # vid = cv2.VideoCapture(video_path)
+    if use_video:
+        video_path = 'tennis/1.mp4'
+        vid = cv2.VideoCapture(video_path)
 
     while True:
 
@@ -90,19 +97,24 @@ if __name__ == '__main__':
         #frame = cv2.imread('tennis/13.jpg')
 
         if not ret:
-            #vid = cv2.VideoCapture(video_path)
-            vid = cv2.VideoCapture(0)
-            vid.set(cv2.CAP_PROP_FRAME_WIDTH, 640) # 1280
-            vid.set(cv2.CAP_PROP_FRAME_HEIGHT, 480) # 720
+            if use_video:
+                vid = cv2.VideoCapture(video_path)
+            else:
+                vid = cv2.VideoCapture(camera_id)
+                vid.set(cv2.CAP_PROP_FRAME_WIDTH, 640) # 1280
+                vid.set(cv2.CAP_PROP_FRAME_HEIGHT, 480) # 720
+            
             ret, frame = vid.read()
             
 
         ts = time.time() # record time usage
         Original = frame.copy()
 
+        # =======================
+
         # Decrease the brightness by subtracting the value
-        value = 30
-            # Convert the image to float32 to prevent clipping issues
+        value = 0
+        # Convert the image to float32 to prevent clipping issues
         frame = frame.astype(np.float32)
 
         # Decrease the brightness by subtracting the value
@@ -111,35 +123,53 @@ if __name__ == '__main__':
         # Clip the values to be in the valid range [0, 255] and convert back to uint8
         frame = np.clip(frame, 0, 255).astype(np.uint8)
 
-         # Convert the image to the LAB color space
-        # Convert the image to the LAB color space
-        lab = cv2.cvtColor(frame, cv2.COLOR_BGR2LAB)
 
-        # Split the LAB image into different channels
-        l, a, b = cv2.split(lab)
+        # hsvImg = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+        # hsvImg[..., 1] = hsvImg[..., 1] * 1.4  # Increase saturation
+        # frame = cv2.cvtColor(hsvImg, cv2.COLOR_HSV2BGR)
 
-        # Apply CLAHE to the L channel
-        clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
-        cl = clahe.apply(l)
 
-        # Merge the CLAHE enhanced L channel back with A and B channels
-        limg = cv2.merge((cl, a, b))
 
-        # Convert the image back to BGR color space
-        result = cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)
+        # # ========================
 
-        # Convert the image to HSV color space
-        hsv = cv2.cvtColor(result, cv2.COLOR_BGR2HSV)
+        # # Convert the image to HSV color space
+        # hsv_image = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+        
+        # target_color = [119, 143, 3]
+        # color_range = 30
 
-        # Increase the saturation of the tennis ball color
-        h, s, v = cv2.split(hsv)
-        s = s.astype(np.float32)  # Ensure the depth is the same
-        s = np.where((h > 20) & (h < 40), s * 1.5, s)  # Adjust the range based on the color of the tennis ball
-        s = np.clip(s, 0, 255).astype(np.uint8)  # Clip and convert back to uint8
-        hsv = cv2.merge((h, s, v))
+        # # Define the target color in HSV
+        # target_color_hsv = cv2.cvtColor(np.uint8([[target_color]]), cv2.COLOR_RGB2HSV)[0][0]
+        
+        # # Define the lower and upper bounds for the target color
+        # lower_bound = np.array([max(0, target_color_hsv[0] - color_range), 50, 50])
+        # upper_bound = np.array([min(179, target_color_hsv[0] + color_range), 255, 255])
+        
+        # # Create a mask for the target color
+        # mask = cv2.inRange(hsv_image, lower_bound, upper_bound)
+        
+        # # Create an inverse mask for the background
+        # inverse_mask = cv2.bitwise_not(mask)
+        
+        # # Enhance the target color by increasing its brightness
+        # enhanced_image = cv2.bitwise_and(frame, frame, mask=mask)
+        # enhanced_image = cv2.addWeighted(enhanced_image, 1.5, np.zeros_like(enhanced_image), 0, 0)
+        
+        # # Darken the background by decreasing its brightness
+        # background = cv2.bitwise_and(frame, frame, mask=inverse_mask)
+        # background = cv2.addWeighted(background, 0.5, np.zeros_like(background), 0, 0)
+        
+        # # Combine the enhanced target color and darkened background
+        # frame = cv2.add(enhanced_image, background)
 
-        # Convert back to BGR color space
-        frame = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+
+        # =============================================
+        # cut off irrelevent background elements with a mask
+        black_background = np.zeros(frame.shape, dtype=np.uint8)
+        height, width, _ = frame.shape
+        mask = np.zeros((height, width), dtype=np.uint8)
+        mask[height // 2:, :] = 255
+        frame = cv2.bitwise_and(frame, frame, mask=mask)
 
         # 将图像从 BGR 转换为 HSV
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
@@ -169,7 +199,8 @@ if __name__ == '__main__':
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         blurred = cv2.GaussianBlur(gray, (7, 7), 3)
         edges = cv2.Canny(blurred, 50, 150)
-        #edges = cv2.bitwise_and(edges, mask_ground)
+        if use_ground_color_mask:
+            edges = cv2.bitwise_and(edges, mask_ground)
         # 对 edges 进行膨胀操作
         edges_dilated = cv2.dilate(edges, None, iterations=1)
 
@@ -242,41 +273,46 @@ if __name__ == '__main__':
                     cv2.rectangle(frame, (x-R_int, y-R_int), (x + R_int, y + R_int), (0, 0, 255), 3)
                     print('circle number : ', i+1 , 'position ' , x-320, y-240)
 
-                # send movement command to the STM:
-                x_pos = x-320
-                direction = "S" # default to stop
-                if x_pos < -image_center_threshold:
-                    direction = "L"
-                elif x_pos > image_center_threshold:
-                    direction = "R"
-                else:
-                    direction = "F"
-                
-                data = ""
-                for i in range(10):
-                    data += direction
-                ser.write(data.encode('utf-8')) #send the command over UART to the STM
+                if robot_control_active:
+                    # send movement command to the STM:
+                    x_pos = x-320
+                    direction = "S" # default to stop
+                    if x_pos < -image_center_threshold:
+                        direction = "L"
+                    elif x_pos > image_center_threshold:
+                        direction = "R"
+                    else:
+                        direction = "F"
+                    
+                    data = ""
+                    for i in range(10):
+                        data += direction
+                    ser.write(data.encode('utf-8')) #send the command over UART to the STM
 
         print('time used all', time.time() - ts)
-        # x_offset = 600
-        # y_offset = 500
-        # # 显示结果图像
-        # cv2.imshow('erode' ,mask)
-        # cv2.moveWindow('erode', x_offset * 0, y_offset * 0)
-        # cv2.imshow('color mask' ,tennis_dilated_mask)
-        # cv2.moveWindow('color mask', x_offset * 0, y_offset * 1)
-        # cv2.imshow('ground mask' ,mask_ground)
-        # cv2.moveWindow('ground mask', x_offset * 1, y_offset * 0)
-        # cv2.imshow('edge capture',edges)
-        # cv2.moveWindow('edge capture', x_offset * 1, y_offset * 1)
-        # cv2.imshow('contour after color comb',result_image)
-        # cv2.moveWindow('contour after color comb', x_offset * 2, y_offset * 0)
-        # cv2.imshow('tennis',frame)
-        # cv2.moveWindow('tennis', x_offset * 2, y_offset * 1)
-        # cv2.imshow('Original',Original)
-        # cv2.moveWindow('Original', x_offset * 2-150, y_offset * 2)
+
+        if ui_active:
+            x_offset = 600
+            y_offset = 500
+            # 显示结果图像
+            cv2.imshow('erode' ,mask)
+            cv2.moveWindow('erode', x_offset * 0, y_offset * 0)
+            cv2.imshow('color mask' ,tennis_dilated_mask)
+            cv2.moveWindow('color mask', x_offset * 0, y_offset * 1)
+            cv2.imshow('ground mask' ,mask_ground)
+            cv2.moveWindow('ground mask', x_offset * 1, y_offset * 0)
+            cv2.imshow('edge capture',edges)
+            cv2.moveWindow('edge capture', x_offset * 1, y_offset * 1)
+            cv2.imshow('contour after color comb',result_image)
+            cv2.moveWindow('contour after color comb', x_offset * 2, y_offset * 0)
+            cv2.imshow('tennis',frame)
+            cv2.moveWindow('tennis', x_offset * 2, y_offset * 1)
+            cv2.imshow('Original',Original)
+            cv2.moveWindow('Original', x_offset * 2-150, y_offset * 2)
+        
         time.sleep(0.01)
 
-        # if cv2.waitKey(1) & 0xFF == ord('q'):
-        #     break
+        if ui_active:
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
 
