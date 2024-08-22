@@ -16,7 +16,8 @@ import serial
 remove_div_points = 8
 length_filter = 30
 random_points =   20 # int(0.75 *  length_filter ) -1 # num + 0.25 Length < Length 
-image_center_threshold = 30
+image_center_threshold = 30 # pixels to the left/right of center which determine when the robot should drive straight
+box_size_threshold = 10 # minimum bounding box size
 
 # set up UART for the STM
 ser = serial.Serial('/dev/serial0', 9600, timeout=1)
@@ -79,8 +80,8 @@ if __name__ == '__main__':
     vid.set(cv2.CAP_PROP_FRAME_WIDTH, 640) # 1280
     vid.set(cv2.CAP_PROP_FRAME_HEIGHT, 480) # 720
 
-    #video_path = 'tennis/1.mp4'
-    #vid = cv2.VideoCapture(video_path)
+    # video_path = 'tennis/1.mp4'
+    # vid = cv2.VideoCapture(video_path)
 
     while True:
 
@@ -97,10 +98,51 @@ if __name__ == '__main__':
 
         ts = time.time() # record time usage
         Original = frame.copy()
-        
-        # A  
+
+        # Decrease the brightness by subtracting the value
+        value = 30
+            # Convert the image to float32 to prevent clipping issues
+        frame = frame.astype(np.float32)
+
+        # Decrease the brightness by subtracting the value
+        frame -= value
+
+        # Clip the values to be in the valid range [0, 255] and convert back to uint8
+        frame = np.clip(frame, 0, 255).astype(np.uint8)
+
+         # Convert the image to the LAB color space
+        # Convert the image to the LAB color space
+        lab = cv2.cvtColor(frame, cv2.COLOR_BGR2LAB)
+
+        # Split the LAB image into different channels
+        l, a, b = cv2.split(lab)
+
+        # Apply CLAHE to the L channel
+        clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
+        cl = clahe.apply(l)
+
+        # Merge the CLAHE enhanced L channel back with A and B channels
+        limg = cv2.merge((cl, a, b))
+
+        # Convert the image back to BGR color space
+        result = cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)
+
+        # Convert the image to HSV color space
+        hsv = cv2.cvtColor(result, cv2.COLOR_BGR2HSV)
+
+        # Increase the saturation of the tennis ball color
+        h, s, v = cv2.split(hsv)
+        s = s.astype(np.float32)  # Ensure the depth is the same
+        s = np.where((h > 20) & (h < 40), s * 1.5, s)  # Adjust the range based on the color of the tennis ball
+        s = np.clip(s, 0, 255).astype(np.uint8)  # Clip and convert back to uint8
+        hsv = cv2.merge((h, s, v))
+
+        # Convert back to BGR color space
+        frame = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+
         # 将图像从 BGR 转换为 HSV
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+
         # 定义网球的颜色范围（根据网球的实际颜色调整）
         mask_1 = cv2.inRange(hsv, np.array([25, 70, 0]), np.array([60, 120, 255]))
         mask_2 = cv2.inRange(hsv, np.array([25, 20, 50]), np.array([60, 255, 160])) #backlighting(beiguang)
@@ -189,14 +231,15 @@ if __name__ == '__main__':
         for i in range(len(Radius)):
             Radius = np.array(Radius)
             max_R = np.max(Radius)
+            R_int = int(Radius[i])
 
-            if cv2.contourArea(valid_circles[i]) > 0.5 * max_area and max_R > 5:
-                R_int = int(Radius[i])
-                center = mean_centers[i]
-                x, y = map(int, map(round, center))
-                cv2.circle(frame, (x,y), 1, (0,0,255), 8)
-                cv2.rectangle(frame, (x-R_int, y-R_int), (x + R_int, y + R_int), (0, 0, 255), 3)
-                print('circle number : ', i+1 , 'position ' , x-320, y-240)
+            if cv2.contourArea(valid_circles[i]) > 0.5 * max_area and max_R > 5 and R_int > box_size_threshold:
+                if Radius[i] == max_R:
+                    center = mean_centers[i]
+                    x, y = map(int, map(round, center))
+                    cv2.circle(frame, (x,y), 1, (0,0,255), 8)
+                    cv2.rectangle(frame, (x-R_int, y-R_int), (x + R_int, y + R_int), (0, 0, 255), 3)
+                    print('circle number : ', i+1 , 'position ' , x-320, y-240)
 
                 # send movement command to the STM:
                 x_pos = x-320
@@ -213,7 +256,7 @@ if __name__ == '__main__':
                     data += direction
                 ser.write(data.encode('utf-8')) #send the command over UART to the STM
 
-        # print('time used all', time.time() - ts)
+        print('time used all', time.time() - ts)
         # x_offset = 600
         # y_offset = 500
         # # 显示结果图像
