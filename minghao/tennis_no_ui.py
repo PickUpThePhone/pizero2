@@ -18,6 +18,7 @@ length_filter = 30
 random_points =   20 # int(0.75 *  length_filter ) -1 # num + 0.25 Length < Length 
 image_center_threshold = 30 # pixels to the left/right of center which determine when the robot should drive straight
 box_size_threshold = 10 # minimum bounding box size
+# glitch_mitigation_threshold = 40 # euclidiean distance (in pixels)
 
 # set up UART for the STM
 ser = serial.Serial('/dev/serial0', 9600, timeout=1)
