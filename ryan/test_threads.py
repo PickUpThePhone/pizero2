@@ -17,10 +17,10 @@ if __name__ == "__main__":
     if cap:
         robot = Robot(cap, port=8080)
         # spam generate object coordinates in one thread
-        thread1 = threading.Thread(target=robot.generate_object_coordinates)
+        thread1 = threading.Thread(target=robot.generate_object_coordinates, daemon=True)
         thread1.start()
-        # spam generate object coordinates in another thread 
-        thread2 = threading.Thread(target=robot.run_server)
+        # spam generate and serve frames in another thread 
+        thread2 = threading.Thread(target=robot.run_server, daemon=True)
         thread2.start()
     else: 
         print("Failed to initialise camera [outside of index range?]")

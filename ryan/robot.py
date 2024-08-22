@@ -47,11 +47,13 @@ class Robot:
             print('circle number : ', i+1 , 'position ' , x-320, y-240)
         return frame
     
-    def generate_object_coordinates(self)
+    def generate_object_coordinates(self):
         while True:
-            self.C,self.R = self.tennis_detector.detect(frame)
+            success,frame = self.cap.read()
+            if success: 
+                self.C,self.R = self.tennis_detector.detect(frame)
             # spam update object coordinates
-            yield self.C,self.R
+            time.sleep(0.02)
     
     def generate_frame(self):
         while True:
