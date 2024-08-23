@@ -4,6 +4,7 @@ from tennis_detect import tennis_detector
 import time
 import numpy as np
 from serial import Serial
+from vision import vision 
 
 class Robot:
     def __init__(self, cap, port=8080): 
@@ -11,7 +12,8 @@ class Robot:
         self.port = port
         self.app = Flask(__name__)
         self.app_route()
-        self.tennis_detector = tennis_detector(length_filter=30, remove_div_points = 8, random_points=20, threshold=4)
+        #self.tennis_detector = tennis_detector(length_filter=30, remove_div_points = 8, random_points=20, threshold=4)
+        self.vision = vision()
         self.C = []
         self.R = []
         self.image_center_threshold = 20 # so that the turn towards algorithm does not get stuck in an infinite loop 
@@ -43,19 +45,23 @@ class Robot:
             return Response(frame_packet, mimetype='multipart/x-mixed-replace; boundary=frame')
 
     def draw_shapes(self, frame):
-        for i in range(len(self.R)):
-            R_int = self.R[i]
-            x,y = self.C[i]
-            cv.circle(frame, (x,y), 1, (0,0,255), 8)
-            cv.rectangle(frame, (x-R_int, y-R_int), (x + R_int, y + R_int), (0, 0, 255), 3)
-            print('circle number : ', i+1 , 'position ' , x-320, y-240)
+        # for i in range(len(self.R)):
+        #     R_int = self.R[i]
+        #     x,y = self.C[i]
+        #     cv.circle(frame, (x,y), 1, (0,0,255), 8)
+        #     cv.rectangle(frame, (x-R_int, y-R_int), (x + R_int, y + R_int), (0, 0, 255), 3)
+        #     print('circle number : ', i+1 , 'position ' , x-320, y-240)
+        x,y = self.C
+        cv.circle(frame, (int(x), int(y)), int(self.R), (0, 255, 255), 2)
+        cv.circle(frame, self.C, 5, (0, 0, 255), -1)
         return frame
     
     def generate_object_coordinates(self):
         while True:
             success,frame = self.cap.read()
             if success: 
-                self.C,self.R = self.tennis_detector.detect(frame)
+                self.C, self.R = self.vision.detect(frame)
+                #self.C,self.R = self.tennis_detector.detect(frame)
                 #print(f"C = {self.C}")
                 #print(f"R = {self.R}")
             # spam update object coordinates
@@ -99,41 +105,21 @@ class Robot:
         
     def movement_control(self): 
         while True: 
-            if len(self.R)>0: 
-                # define an array of x,y coordinates equal to the number of circle center. 
-                x = np.zeros(len(self.C))
-                y = np.zeros(len(self.C))
-                r = np.zeros(len(self.R))
-                # step through each circle center and corresponding radius 
-                i = 0
-                for center, radius in zip(self.C, self.R):
-                    # extract the x,y coordinates from center current center
-                    x[i] = center[i] # x in the [x,y] value of center
-                    # normalise so that x is from -160 to +160 with frame center at 0
-                    x[i] = x[i] - 320 
-                    # extract radius 
-                    r[i] = radius
-                    i = i + 1
-                # determine the coordinates that correspond to the largest radius 
-                max_idx = np.argmax(r)
-                x_closest = x[max_idx]
-                y_closest = y[max_idx] # we dont actually need the y coordinate but its good to have as we may need it later
-                # turn robot towards those coordinates
-                direction = "S" # default stop  
-                if x_closest < -self.image_center_threshold:
-                    direction = "L"
-                elif x_closest > self.image_center_threshold:
-                    direction = "R"
-                else: 
-                    direction = "F"     
-                data = ""
-                # I am not sure what the loop is for
-                for i in range(10):
-                    data += direction
-                self.ser.write(data.encode('utf-8')) #send the command over UART to the STM
-                print(f"{direction}")
-    
-            
+            x,y = self.C
+            direction = "S" # default stop  
+            if x < -self.image_center_threshold:
+                direction = "L"
+            elif x > self.image_center_threshold:
+                direction = "R"
+            else: 
+                direction = "F"     
+            data = ""
+            # I am not sure what the loop is for
+            for i in range(10):
+                data += direction
+            self.ser.write(data.encode('utf-8')) #send the command over UART to the STM
+            print(f"{direction}")
+                        
         
         
             
