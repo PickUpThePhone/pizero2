@@ -19,10 +19,13 @@ if __name__ == "__main__":
         # spam generate object coordinates in one thread
         thread1 = threading.Thread(target=robot.generate_object_coordinates, daemon=True)
         thread1.start()
-        # spam generate and serve frames in another thread 
-        thread2 = threading.Thread(target=robot.run_server, daemon=True)
+        # spam generate movement commands based on detected object coordinates from thread1. 
+        thread2 = threading.Thread(target=robot.movement_control, daemon=True) 
         thread2.start()
-        thread2.join()
+        # spam generate and serve frames in another thread, drawing bounding boxes from the coordinates generated in thread1. 
+        thread3 = threading.Thread(target=robot.run_server, daemon=True)
+        thread3.start()
+        thread3.join()
     else: 
         print("Failed to initialise camera [outside of index range?]")
         

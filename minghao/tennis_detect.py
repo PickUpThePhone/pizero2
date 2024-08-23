@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-class tennis_detector:
+class tennis_detctor:
     def __init__(self, length_filter=30, remove_div_points=8,random_points=20,threshold=4):
         
         self.length_filter = length_filter # 30 
