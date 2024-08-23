@@ -45,43 +45,35 @@ class Robot:
             return Response(frame_packet, mimetype='multipart/x-mixed-replace; boundary=frame')
 
     def draw_shapes(self, frame):
-        # Check if object coordinates and radius are valid
-        if self.C is not None and self.R > 0:
-            x, y = self.C
-            # Draw the circle around the detected object
-            cv.circle(frame, (int(x), int(y)), int(self.R), (0, 255, 255), 2)
-            # Draw the center of the detected object
-            cv.circle(frame, (int(x), int(y)), 5, (0, 0, 255), -1)
-        # Return the frame with or without drawn shapes
+        x, y = self.C
+        # Draw the circle around the detected object
+        cv.circle(frame, (int(x), int(y)), int(self.R), (0, 255, 255), 2)
+        # Draw the center of the detected object
+        cv.circle(frame, self.C, 5, (0, 0, 255), -1)
         return frame
 
-    
+     
     def generate_object_coordinates(self):
         lower_yellow = np.array([29,86,6]) 
         upper_yellow = np.array([64,255,255]) 
         while True:
             success, frame = self.cap.read()
-            if success:
-                hsv = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
-                mask = cv.inRange(hsv, self.lower_yellow, self.upper_yellow)
-                mask = cv.erode(mask, None, iterations=2)
-                mask = cv.dilate(mask, None, iterations=2)
-                contours, _ = cv.findContours(mask.copy(), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
-                
-                if contours:
-                    c = max(contours, key=cv.contourArea)
-                    ((x, y), radius) = cv.minEnclosingCircle(c)
-                    M = cv.moments(c)
-                    center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
-                    if radius > 10:
-                        self.C = center
-                        self.R = radius
-                    else:
-                        self.C = None
-                        self.R = 0
-                else:
-                    self.C = None
-                    self.R = 0
+            if not success: 
+                break
+            hsv = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
+            mask = cv.inRange(hsv, lower_yellow, upper_yellow)
+            mask = cv.erode(mask, None, iterations=2)
+            mask = cv.dilate(mask, None, iterations=2)
+            contours, _ = cv.findContours(mask.copy(), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+            
+            if len(contours)>0:
+                c = max(contours, key=cv.contourArea)
+                ((x, y), radius) = cv.minEnclosingCircle(c)
+                M = cv.moments(c)
+                center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
+                if radius > 10:
+                    self.C = center
+                    self.R = radius
             time.sleep(0.1) 
 
     def cast_frame(self,frame): 
