@@ -56,6 +56,8 @@ class Robot:
             success,frame = self.cap.read()
             if success: 
                 self.C,self.R = self.tennis_detector.detect(frame)
+                #print(f"C = {self.C}")
+                #print(f"R = {self.R}")
             # spam update object coordinates
             
     def cast_frame(self,frame): 
@@ -73,7 +75,7 @@ class Robot:
     def generate_frame(self):
         while True:
             #reduce the frame rate significantly to reduce CPU strain. Can do this because it is just  GUI and not important for the robots function
-            time.sleep(0.2)
+            time.sleep(0.02)
             success, frame = self.cap.read()
             if not success:
                 print("Could not get frame")
@@ -103,13 +105,15 @@ class Robot:
                 y = np.zeros(len(self.C))
                 r = np.zeros(len(self.R))
                 # step through each circle center and corresponding radius 
-                for (center,radius,i) in enumerate(zip(self.C, self.R)):
+                i = 0
+                for center, radius in zip(self.C, self.R):
                     # extract the x,y coordinates from center current center
-                    x[i], y[i] = map(int, map(round, center)) # Taken from line 189 of tennis_.py I assume it works
+                    x[i] = center[i] # x in the [x,y] value of center
                     # normalise so that x is from -160 to +160 with frame center at 0
                     x[i] = x[i] - 320 
                     # extract radius 
                     r[i] = radius
+                    i = i + 1
                 # determine the coordinates that correspond to the largest radius 
                 max_idx = np.argmax(r)
                 x_closest = x[max_idx]
@@ -127,6 +131,7 @@ class Robot:
                 for i in range(10):
                     data += direction
                 self.ser.write(data.encode('utf-8')) #send the command over UART to the STM
+                print(f"{direction}")
     
             
         
