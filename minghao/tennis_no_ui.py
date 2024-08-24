@@ -23,8 +23,8 @@ box_size_threshold = 10 # minimum bounding box size
 robot_control_active = False 
 ui_active = True
 use_video = False
-use_ground_color_mask = False
-camera_id = 1
+use_ground_color_mask = use_video
+camera_id = 0
 
 # set up UART for the STM
 if robot_control_active:
@@ -127,8 +127,6 @@ if __name__ == '__main__':
         # hsvImg = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         # hsvImg[..., 1] = hsvImg[..., 1] * 1.4  # Increase saturation
         # frame = cv2.cvtColor(hsvImg, cv2.COLOR_HSV2BGR)
-
-
 
         # # ========================
 
@@ -260,6 +258,7 @@ if __name__ == '__main__':
                 max_contour = contour
 
         # 以圆心，半径，画出框
+        direction = "S" # default to stop
         for i in range(len(Radius)):
             Radius = np.array(Radius)
             max_R = np.max(Radius)
@@ -276,7 +275,6 @@ if __name__ == '__main__':
                 if robot_control_active:
                     # send movement command to the STM:
                     x_pos = x-320
-                    direction = "S" # default to stop
                     if x_pos < -image_center_threshold:
                         direction = "L"
                     elif x_pos > image_center_threshold:
@@ -284,10 +282,12 @@ if __name__ == '__main__':
                     else:
                         direction = "F"
                     
-                    data = ""
-                    for i in range(10):
-                        data += direction
-                    ser.write(data.encode('utf-8')) #send the command over UART to the STM
+        
+        if robot_control_active:
+            data = ""
+            for i in range(10):
+                data += direction
+            ser.write(data.encode('utf-8')) #send the command over UART to the STM
 
         print('time used all', time.time() - ts)
 
