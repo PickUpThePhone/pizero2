@@ -46,9 +46,9 @@ class Robot:
         for i in range(len(self.R)):
             radius = self.R[i]
             x,y = self.C[i]
-            cv.circle(frame, (x,y), radius, (0,0,255), 22)
-            cv.cicle(frame, (x,y), 5, (0,0,255), -1)
-            print("tennis ball detected")
+            cv.circle(frame, (x,y), radius, (0,255,255), 2)
+            cv.circle(frame, (x,y), 5, (0,0,255), -1)
+            #print("tennis ball detected")
         return frame
     
     def generate_object_coordinates(self):
@@ -56,6 +56,8 @@ class Robot:
             success,frame = self.cap.read()
             if success: 
                 self.C,self.R = self.vision.detect(frame)
+                #print(self.C)
+                #print(self.R)
             # spam update object coordinates
             
     def cast_frame(self,frame): 
@@ -73,11 +75,11 @@ class Robot:
     def generate_frame(self):
         while True:
             #reduce the frame rate significantly to reduce CPU strain. Can do this because it is just  GUI and not important for the robots function
-            time.sleep(0.2)
+            time.sleep(0.1)
             success, frame = self.cap.read()
-            if not success:
-                print("Could not get frame")
-                break
+            if not success or frame is None:
+                print("Could not get frame. Continuing...")
+                continue
             # cast the frame into a standard size 
             frame = self.cast_frame(frame)
             # draw the object detection shapes on the frame
@@ -99,23 +101,26 @@ class Robot:
         while True: 
             if len(self.R)>0: 
                 # only if radius is large enough 
-                if self.R > 10:
-                    x,_ = self.C
+                radius = self.R[0]
+                if radius > 10:
+                    x,_ = self.C[0]
                     # define an array of x,y coordinactually need the y coordinate but its good to have as we may need it later
                     # turn robot towards those coordinates
                     direction = "S" # default stop  
-                    if x < -self.image_center_threshold:
+                    if x-320 < -self.image_center_threshold:
                         direction = "L"
-                    elif x > self.image_center_threshold:
+                    elif x-320 > self.image_center_threshold:
                         direction = "R"
                     else: 
                         direction = "F"     
                     data = ""
                     # I am not sure what the loop is for
+                    print(direction)
                     for i in range(10):
                         data += direction
                     self.ser.write(data.encode('utf-8')) #send the command over UART to the STM
-    
+                    # wait 
+                    time.sleep(0.02) 
             
         
         
