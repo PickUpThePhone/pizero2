@@ -1,10 +1,9 @@
 from flask import Flask, Response
 import cv2 as cv
-from tennis_detect import tennis_detector
+from vision import vision
 import time
 import numpy as np
 from serial import Serial
-from vision import vision 
 
 class Robot:
     def __init__(self, cap, port=8080): 
@@ -12,7 +11,6 @@ class Robot:
         self.port = port
         self.app = Flask(__name__)
         self.app_route()
-        #self.tennis_detector = tennis_detector(length_filter=30, remove_div_points = 8, random_points=20, threshold=4)
         self.vision = vision()
         self.C = []
         self.R = []
@@ -45,37 +43,21 @@ class Robot:
             return Response(frame_packet, mimetype='multipart/x-mixed-replace; boundary=frame')
 
     def draw_shapes(self, frame):
-        x, y = self.C
-        # Draw the circle around the detected object
-        cv.circle(frame, (int(x), int(y)), int(self.R), (0, 255, 255), 2)
-        # Draw the center of the detected object
-        cv.circle(frame, self.C, 5, (0, 0, 255), -1)
+        for i in range(len(self.R)):
+            radius = self.R[i]
+            x,y = self.C[i]
+            cv.circle(frame, (x,y), radius, (0,0,255), 22)
+            cv.cicle(frame, (x,y), 5, (0,0,255), -1)
+            print("tennis ball detected")
         return frame
-
-     
+    
     def generate_object_coordinates(self):
-        lower_yellow = np.array([29,86,6]) 
-        upper_yellow = np.array([64,255,255]) 
         while True:
-            success, frame = self.cap.read()
-            if not success: 
-                break
-            hsv = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
-            mask = cv.inRange(hsv, lower_yellow, upper_yellow)
-            mask = cv.erode(mask, None, iterations=2)
-            mask = cv.dilate(mask, None, iterations=2)
-            contours, _ = cv.findContours(mask.copy(), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+            success,frame = self.cap.read()
+            if success: 
+                self.C,self.R = self.vision.detect(frame)
+            # spam update object coordinates
             
-            if len(contours)>0:
-                c = max(contours, key=cv.contourArea)
-                ((x, y), radius) = cv.minEnclosingCircle(c)
-                M = cv.moments(c)
-                center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
-                if radius > 10:
-                    self.C = center
-                    self.R = radius
-            time.sleep(0.1) 
-
     def cast_frame(self,frame): 
         # Decrease the brightness by subtracting the value
         value = 0
@@ -91,7 +73,7 @@ class Robot:
     def generate_frame(self):
         while True:
             #reduce the frame rate significantly to reduce CPU strain. Can do this because it is just  GUI and not important for the robots function
-            time.sleep(0.02)
+            time.sleep(0.2)
             success, frame = self.cap.read()
             if not success:
                 print("Could not get frame")
@@ -115,21 +97,26 @@ class Robot:
         
     def movement_control(self): 
         while True: 
-            x,y = self.C
-            direction = "S" # default stop  
-            if x < -self.image_center_threshold:
-                direction = "L"
-            elif x > self.image_center_threshold:
-                direction = "R"
-            else: 
-                direction = "F"     
-            data = ""
-            # I am not sure what the loop is for
-            for i in range(10):
-                data += direction
-            self.ser.write(data.encode('utf-8')) #send the command over UART to the STM
-            print(f"{direction}")
-                        
+            if len(self.R)>0: 
+                # only if radius is large enough 
+                if self.R > 10:
+                    x,_ = self.C
+                    # define an array of x,y coordinactually need the y coordinate but its good to have as we may need it later
+                    # turn robot towards those coordinates
+                    direction = "S" # default stop  
+                    if x < -self.image_center_threshold:
+                        direction = "L"
+                    elif x > self.image_center_threshold:
+                        direction = "R"
+                    else: 
+                        direction = "F"     
+                    data = ""
+                    # I am not sure what the loop is for
+                    for i in range(10):
+                        data += direction
+                    self.ser.write(data.encode('utf-8')) #send the command over UART to the STM
+    
+            
         
         
             
