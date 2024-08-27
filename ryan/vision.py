@@ -22,7 +22,9 @@ class vision:
             # Find the largest contour in the mask, then use it to compute the minimum enclosing circle and centroid
             c = max(contours, key=cv.contourArea)
             ((x, y), r) = cv.minEnclosingCircle(c)
+            M = cv.moments(c)
             # add the radius to list
-            center.append([int(x),int(y)])
+            center.append([int(M["m10"]/M["m00"]), int(M["m01"]/M["m00"])])
+            #center.append([int(x),int(y)])
             radius.append(int(r))
         return center, radius
