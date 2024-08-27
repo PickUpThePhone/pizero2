@@ -1,61 +1,50 @@
-import cv2
+from inference import get_model
 import numpy as np
-from inference_sdk import InferenceHTTPClient
-from io import BytesIO
+import supervision as sv
+import cv2
+
 
 class Yolo:
-    def __init__(self, api_url="https://detect.roboflow.com", api_key="JKeSXyTNdvUIJDdThDP3"):
-               
-            self.CLIENT = InferenceHTTPClient(api_url, api_key)
-            self.MODEL_ID = "tennis-ball-detection-qtrus/2"
+    def __init__(self, model_id, frame_shape = []): 
+        self.model = get_model(model_id)
+        self.bounding_box_annotator = sv.BoundingBoxAnnotator()
+        self.label_annotator = sv.LabelAnnotator()
+        self.frame_shape = frame_shape
+        self.detections = []
+        # run inference on our chosen image, image can be a url, a numpy array, a PIL image, etc.
 
-    def get_inference(self,frame):
-        """Send the image to RoboFlow API for inference using the InferenceHTTPClient."""
-        # Convert image to bytes
-        _, img_encoded = cv2.imencode('.jpg', frame)
-        img_bytes = img_encoded.tobytes()
+    def detect(self,frame):   
+        results = self.model.infer(frame)[0]
+        self.detections = sv.Detections.from_inference(results)
+        return self.detections
 
-        # Use InferenceHTTPClient to send the image for inference
-        result = self.CLIENT.infer(image=BytesIO(img_bytes), model_id=self.MODEL_ID)
+    def get_closest(self, detections): 
+        # Filter for tennis balls and find the closest one
+        closest_ball = None
+        min_distance = float('inf')
+        frame_center = (self.frame_shape[1] // 2, self.frame_shape[0] // 2)
+        for detection in detections:
+            # Assuming the label for tennis balls is 'tennis_ball'; adjust as needed
+            if detection.label == 'tennis_ball':
+                bbox = detection.bbox
+                x_center = (bbox[0] + bbox[2]) / 2
+                y_center = (bbox[1] + bbox[3]) / 2
+                # Compute distance from the center of the frame
+                distance = np.sqrt((x_center - frame_center[0])**2 + (y_center - frame_center[1])**2)
+                if distance < min_distance:
+                    min_distance = distance
+                    closest_ball = detection
+                    closest_x_center = x_center
+                    closest_y_center = y_center
+                    closest_radius = np.sqrt((bbox[2] - bbox[0])**2 + (bbox[3] - bbox[1])**2) / 2
+            if closest_ball:
+                return [closest_x_center, closest_y_center], closest_radius
+            else: 
+                return [], []
         
-        # Return the result
-        return result
-
-    def extract_largest_ball(self, result):
-        """Extract the center and radius of the largest tennis ball from the result."""
-        if 'predictions' not in result:
-            print("No predictions found.")
-            return None, None
-        
-        # Extract predictions
-        predictions = result['predictions']
-        
-        # Initialize variables to track the largest ball
-        largest_area = 0
-        largest_ball = None
-
-        for prediction in predictions:
-            # Extract bounding box coordinates
-            x_center = prediction['x']
-            y_center = prediction['y']
-            width = prediction['width']
-            height = prediction['height']
-            
-            # Calculate the area of the bounding box
-            area = width * height
-            
-            # Update largest ball if this one is larger
-            if area > largest_area:
-                largest_area = area
-                largest_ball = prediction
-        
-        if largest_ball is None:
-            print("No tennis balls detected.")
-            return None, None
-        
-        # Calculate the center and radius of the largest ball
-        x_center = largest_ball['x']
-        y_center = largest_ball['y']
-        radius = max(largest_ball['width'], largest_ball['height']) / 2
-        
-        return (x_center, y_center), radius
+    def draw_shapes(self, frame): 
+        annotated_image = self.bounding_box_annotator.annotate(
+            scene=frame, detections=self.detections)
+        annotated_image = self.label_annotator.annotate(
+            scene=annotated_image, detections=self.detections)
+        return annotated_image

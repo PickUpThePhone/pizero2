@@ -44,21 +44,12 @@ class Robot:
             frame_packet = self.generate_frame()
             return Response(frame_packet, mimetype='multipart/x-mixed-replace; boundary=frame')
 
-    def draw_shapes(self, frame):
-        for i in range(len(self.R)):
-            radius = self.R[i]
-            x,y = self.C[i]
-            cv.circle(frame, (x,y), radius, (0,0,255), 22)
-            cv.cicle(frame, (x,y), 5, (0,0,255), -1)
-            print("tennis ball detected")
-        return frame
-    
     def generate_object_coordinates(self):
         while True:
             success,frame = self.cap.read()
             if success: 
-                result = self.yolo.get_inference(frame)
-                self.C, self.R = self.yolo.extract_largest_ball(result)
+                detections = self.yolo.detect(frame)
+                self.C, self.R = self.yolo.get_closest(detections)
                 #self.C, self.R = self.yolo.get_inference(frame)
             # self.C,self.R = self.vision.detect(frame)
             # spam update object coordinates
