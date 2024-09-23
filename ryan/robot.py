@@ -136,6 +136,8 @@ class Robot:
                     # drive toward that direction  
                     self.ser.write(direction.encode('utf-8')) #send the command over UART to the STM
                     print(direction)
+                    # reset all counters to 0
+                    l_count = r_count = f_count = 0
 
 
             # ================================================================================================
@@ -144,6 +146,8 @@ class Robot:
                 stop = "SSSSSSSSSS"
                 self.ser.write(stop.encode('utf-8'))
                 print(f"No ball detected")
+                # reset all counters to 0 
+                l_count = r_count = f_count = 0
 
             #=====================================================
             # sleep for 20ms to save resources 
