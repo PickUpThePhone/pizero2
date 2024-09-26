@@ -14,8 +14,32 @@ class Robot:
         self.vision = vision()
         self.C = []
         self.R = []
-        self.image_center_threshold = 20 # so that the turn towards algorithm does not get stuck in an infinite loop 
         self.ser = Serial('/dev/serial0', 9600, timeout=1) # start serial instance for Robot
+
+    def encode_frame(self, frame):
+        success, buffer = cv.imencode('.jpg', frame)
+        if not success:
+            print("Failed to encode")
+            return None, False
+        return buffer.tobytes(), True
+
+    def app_route(self):
+        @self.app.route('/')
+        def index():
+            print("Page requested")
+            return '''
+            <!doctype html>
+            <html>
+            <body>
+                <img src="/video_feed">
+            </body>
+            </html>
+            '''
+        
+        @self.app.route('/video_feed')
+        def video_feed():
+            frame_packet = self.generate_frame()
+            return Response(frame_packet, mimetype='multipart/x-mixed-replace; boundary=frame')
 
     def draw_shapes(self, frame):
         for i in range(len(self.R)):
@@ -147,3 +171,11 @@ class Robot:
             #=====================================================
             # sleep for 20ms to save resources 
             time.sleep(0.01)
+
+            
+        
+        
+            
+            
+            
+        
