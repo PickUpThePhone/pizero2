@@ -77,38 +77,33 @@ class Robot:
         l_count = 0
         r_count = 0 
         f_count = 0
+        s_count = 0
         # counter for num instances a ball has been detected in a row
         inst = 0
         image_center_threshold = 120 
+
         while True: 
-
-
+            inst += 1
             #If there is at least one ball detected 
             if len(self.R)>0:
-                inst+=1
                 # get the radius of the closest ball (by default only the closest is saved in this array)
                 radius = self.R[0]
                 # get ball center x coordinate
                 center_x, _ = self.C[0]
                 # get pixel dist from center 
                 dist_from_center = center_x - 320
-                
+       
                 #======================================================================
                 
                 # If the ball is far away: (determined by a small ball radius)
-                if (radius < 140):
+                if radius < 90:
                     image_center_threshold = 120 
-                # if the ball is in medium distance 
-                elif (140 <= radius < 200): 
-                    image_center_threshold = 30
-                # if the ball is close (radius larger than 200 pixels)
+                # if the ball is close 
                 else: 
-                    # stop immediately 
-                    stop = "SSSSSSSSSS"
-                    self.ser.write(stop.encode('utf-8'))
-                    print(f"Ball is close. Halt movement.\n")
-                    # restart the loop 
-                    continue
+                    image_center_threshold = 30
+                    uart_data = "CCCCCCCCCCCCC"
+                    self.ser.write(uart_data.encode('utf-8'))
+                    print("close")
 
                 #=====================================================================
 
@@ -119,36 +114,36 @@ class Robot:
                 elif dist_from_center > image_center_threshold:
                     # vote that the robot drives right 
                     r_count+=1
-                else: 
+                else:
                     # vote that the robot drives forward 
                     f_count+=1
-                
-                
-                #======================================================================
-
-                # While loop has detected a ball 3 instances in a row, and now the vote takes place on which direction to move
-                if inst>=3:
-                    # choose the direction that has the highest votes 
-                    counts = [l_count, r_count, f_count]
-                    directions = ["LLLLLLLLLL", "RRRRRRRRRR", "FFFFFFFFFF"]
-                    max_idx = counts.index(max(counts))
-                    direction = directions[max_idx]
-                    # drive toward that direction  
-                    self.ser.write(direction.encode('utf-8')) #send the command over UART to the STM
-                    print(direction)
-                    # reset all counters to 0
-                    l_count = r_count = f_count = 0
-
-
-            # ================================================================================================
-            # CURRENTLY THIS TELLS THE ROBOT TO STOP WHEN THERE IS NO BALL DETECTED. WE WILL NEED TO DECIDE WHAT HAPPENS WHEN IT CANT SEE ANYTHING
+                    if image_center_threshold == 30:
+                        uart_data = "WWWWWWWWWWWWW"
+                        self.ser.write(uart_data.encode('utf-8'))
+                        print("ready to scoop the ball. Waiting 4s...")
+                        time.sleep(4)
+                        l_count = r_count = f_count = s_count = inst = 0
+                        image_center_threshold = 120
+                        continue
             else:
-                stop = "SSSSSSSSSS"
-                self.ser.write(stop.encode('utf-8'))
-                print(f"No ball detected")
-                # reset all counters to 0 
-                l_count = r_count = f_count = 0
+                s_count += 1
+
+            #======================================================================
+
+            # While loop has detected a ball 3 instances in a row, and now the vote takes place on which direction to move
+            if inst>=5:
+                # choose the direction that has the highest votes 
+                counts = [l_count, r_count, f_count, s_count]
+                directions = ["LLLLLLLLLLL", "RRRRRRRRRRR", "FFFFFFFFFFF","SSSSSSSSSS"]
+                max_idx = np.argmax(counts)
+                direction = directions[max_idx]
+                # drive toward that direction  
+                self.ser.write(direction.encode('utf-8')) #send the command over UART to the STM
+                print(direction[0])
+                # reset all counters to 0
+                l_count = r_count = f_count = s_count = 0
+                inst = 0
 
             #=====================================================
             # sleep for 20ms to save resources 
-            time.sleep(0.02)
+            time.sleep(0.01)
