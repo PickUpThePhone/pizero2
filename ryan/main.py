@@ -22,8 +22,8 @@ if __name__ == "__main__":
 
 
         # spam generate object coordinates in one thread
-        thread1 = threading.Thread(target=robot.generate_object_coordinates, daemon=True)
-        thread1.start()
+        #thread1 = threading.Thread(target=robot.generate_object_coordinates, daemon=True)
+        #thread1.start()
 
         # spam generate movement commands based on detected object coordinates from thread1. 
         thread2 = threading.Thread(target=robot.movement_control, daemon=True) 

@@ -51,13 +51,13 @@ class Robot:
         return frame
     
     def generate_object_coordinates(self):
-        while True:
-            success,frame = self.cap.read()
-            if success: 
-                self.C,self.R = self.vision.detect(frame)
-                #print(self.C)
-                #print(self.R)
-            # spam update object coordinates
+        #while True:
+        success,frame = self.cap.read()
+        if success: 
+            self.C,self.R = self.vision.detect_tennisball(frame)
+            #print(self.C)
+            #print(self.R)
+        # spam update object coordinates
             
     def cast_frame(self,frame): 
         # Decrease the brightness by subtracting the value
@@ -106,7 +106,14 @@ class Robot:
         inst = 0
         image_center_threshold = 120 
 
+        # ===================================== RYAN NOTE ============================
+        
+        # Experimenting with generate_obejct_coordinates here. the code may or may not become faster. uncomment it out and bring back the while loop 
+        # in the original function if it becomes slower. also uncomment the thread for generate_obejct_coordinates in main.py if it becomes slower.
+        
+        #========================================================================
         while True: 
+            self.generate_object_coordinates() # <------------------------------------------------ comment if the code becomes slow. 
             inst += 1
             #If there is at least one ball detected 
             if len(self.R)>0:
