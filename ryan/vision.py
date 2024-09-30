@@ -1,30 +1,38 @@
-import cv2 as cv
+import cv2 
 import numpy as np
 import serial
 
 class vision: 
     def __init__(self):
-        self.lower_yellow = np.array([29,86,6])
-        self.upper_yellow = np.array([64,255,255])
+        self.lower_yellow = np.array([17,117,150])
+        self.upper_yellow = np.array([23,255,255])
         # Convert the frame to the HSV color space
 
     def detect(self, frame):
-        hsv = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
-        mask = cv.inRange(hsv, self.lower_yellow, self.upper_yellow)
-        mask = cv.erode(mask, None, iterations=2)
-        mask = cv.dilate(mask, None, iterations=2)
-        contours, _ = cv.findContours(mask.copy(), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
-        # in case we want to detect multiple obejects in the image later
-        center = []        
-        radius = []
-        # only update radius and center if at least 1 contour was found
+
+        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+        mask = cv2.inRange(hsv, self.lower_yellow, self.upper_yellow)
+        mask = cv2.erode(mask, None, iterations=2)
+        mask = cv2.dilate(mask, np.ones((5, 5)), iterations=2)
+        height, width = mask.shape[:2]
+        mask[:height//4 , :] = 0
+        contours, _ = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        bottom_half = []
         if len(contours) > 0:
             # Find the largest contour in the mask, then use it to compute the minimum enclosing circle and centroid
-            c = max(contours, key=cv.contourArea)
-            ((x, y), r) = cv.minEnclosingCircle(c)
-            M = cv.moments(c)
-            # add the radius to list
-            center.append([int(M["m10"]/M["m00"]), int(M["m01"]/M["m00"])])
-            #center.append([int(x),int(y)])
-            radius.append(int(r))
-        return center, radius
+            #c = max(contours, key=cv2.contourArea)
+            bottom_half = []
+            for c in contours:
+                
+                ((x, y), radius) = cv2.minEnclosingCircle(c)
+                x, y, w, h = cv2.boundingRect(c)
+                if w > width//10:
+                    bottom_half.append(c)
+
+        if bottom_half:
+            c = max(bottom_half, key=cv2.contourArea)
+            x, y, w, h = cv2.boundingRect(c)
+            center = int(x+w/2),int(y+h/2)
+
+        return [center], [radius]
+
